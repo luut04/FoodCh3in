@@ -1,0 +1,78 @@
+@import '../../app/variables';
+
+.header {
+  margin-bottom: 2rem;
+  
+  h1 {
+    font-size: 2.25rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, $neon-purple, $neon-cyan);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .infoBlock {
+    p:first-child {
+      font-size: 0.875rem;
+      color: $gray-400;
+    }
+    
+    .email {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: white;
+    }
+    
+    .wallet {
+      font-size: 0.875rem;
+      font-family: monospace;
+      color: $neon-cyan;
+    }
+  }
+}
+
+.menuGrid {
+  display: grid;
+  gap: 1.5rem;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  
+  .modalContent {
+    max-width: 28rem;
+    text-align: center;
+    margin-top: 1rem;
+    color: $neon-cyan;
+  }
+}
+

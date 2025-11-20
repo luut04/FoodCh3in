@@ -1,0 +1,163 @@
+@import '../../app/variables';
+
+.success {
+  text-align: center;
+  margin-bottom: 2rem;
+  
+  .icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+  
+  h1 {
+    font-size: 2.25rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, $neon-purple, $neon-cyan);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  p {
+    color: $gray-400;
+  }
+}
+
+.ticketCard {
+  border: 2px solid $neon-purple;
+  margin-bottom: 1.5rem;
+}
+
+.ticketHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  
+  h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+  }
+}
+
+.badge {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  
+  &.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+  }
+  
+  &.consumed {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+  }
+}
+
+.orderDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.orderItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  .itemInfo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    span:first-child {
+      font-size: 2rem;
+    }
+    
+    span:last-child {
+      color: white;
+      font-weight: 600;
+    }
+  }
+  
+  .price {
+    color: $neon-cyan;
+  }
+}
+
+.orderTotal {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  
+  span:first-child {
+    color: white;
+  }
+  
+  span:last-child {
+    color: $neon-purple;
+  }
+}
+
+.nftInfo {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  
+  .label {
+    color: $gray-400;
+  }
+  
+  .value {
+    color: white;
+    font-family: monospace;
+    
+    &.cyan {
+      color: $neon-cyan;
+    }
+    
+    &.small {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+.qrSection {
+  text-align: center;
+  
+  h3 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    font-size: 0.875rem;
+    color: $gray-400;
+    margin-top: 1rem;
+  }
+}
+
+.actions {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
