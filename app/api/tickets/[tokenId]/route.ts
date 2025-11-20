@@ -1,60 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { ordersStore } from '@/lib/ordersStore';
-import { getTicketOwner, isTicketConsumed } from '@/lib/chain';
+import { TicketStatus } from '@/types';
 
-/**
- * GET /api/tickets/[tokenId]
- * Get ticket status
- */
 export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ tokenId: string }> }
+  request: Request,
+  { params }: { params: { tokenId: string } }
 ) {
-  try {
-    const { tokenId } = await params;
+  const tokenId = params.tokenId;
 
-    if (!tokenId) {
-      return NextResponse.json(
-        { error: 'tokenId is required' },
-        { status: 400 }
-      );
-    }
+  // 1. Buscamos el Ticket usando TU store
+  const ticket = ordersStore.getTicket(tokenId);
 
-    // Get ticket from store
-    const ticket = ordersStore.getTicket(tokenId);
-
-    if (!ticket) {
-      return NextResponse.json(
-        { error: 'Ticket not found' },
-        { status: 404 }
-      );
-    }
-
-    // Get order details
-    const order = ordersStore.getOrder(ticket.orderId);
-
-    // Get on-chain status
-    const owner = await getTicketOwner(tokenId);
-    const consumed = await isTicketConsumed(tokenId);
-
-    return NextResponse.json({
-      tokenId: ticket.tokenId,
-      owner: owner || ticket.owner,
-      consumed,
-      metadataUrl: ticket.metadataUrl,
-      order: order ? {
-        id: order.id,
-        items: order.items,
-        total: order.total,
-        userEmail: order.userEmail,
-      } : undefined,
-    });
-  } catch (error) {
-    console.error('Error in /api/tickets/[tokenId]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  if (!ticket) {
+    return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
   }
-}
 
+  // 2. Buscamos la Orden asociada para tener los detalles (hamburguesa, precio, etc)
+  const order = ordersStore.getOrder(ticket.orderId);
+
+  // 3. Construimos la respuesta 'TicketStatus' que espera tu frontend
+  const responseData: TicketStatus = {
+    tokenId: ticket.tokenId,
+    owner: ticket.owner,
+    consumed: ticket.consumed,
+    metadataUrl: ticket.metadataUrl,
+    order: order // Si la orden existe, se envía completa, si no undefined
+  };
+
+  return NextResponse.json(responseData);
+}
