@@ -1,0 +1,12 @@
+@import '../app/variables';
+
+.qrContainer {
+  display: flex;
+  justify-content: center;
+  
+  canvas {
+    border-radius: 0.5rem;
+    border: 2px solid $neon-purple;
+  }
+}
+
