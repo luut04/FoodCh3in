@@ -1,41 +1,24 @@
-'use client';
-
-import { useEffect, useRef } from 'react';
-import QRCodeLib from 'qrcode';
-import styles from '@/styles/QRCode.module.scss';
+import React from 'react';
 
 interface QRCodeProps {
   value: string;
   size?: number;
-  className?: string;
 }
 
-export function QRCode({ value, size = 256, className = '' }: QRCodeProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    if (canvasRef.current) {
-      QRCodeLib.toCanvas(
-        canvasRef.current,
-        value,
-        {
-          width: size,
-          margin: 2,
-          color: {
-            dark: '#a855f7',
-            light: '#ffffff',
-          },
-        },
-        (error) => {
-          if (error) console.error('QR Code generation error:', error);
-        }
-      );
-    }
-  }, [value, size]);
+export const QRCode = ({ value, size = 200 }: QRCodeProps) => {
+  // Usamos una API pública segura para generar la imagen del QR
+  // Esto evita tener que hacer npm install qrcode.react
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(value)}`;
 
   return (
-    <div className={`${styles.qrContainer} ${className}`}>
-      <canvas ref={canvasRef} />
+    <div className="bg-white p-2 rounded-lg inline-block">
+      <img 
+        src={qrUrl} 
+        alt="QR Code" 
+        width={size} 
+        height={size}
+        className="rounded-md"
+      />
     </div>
   );
-}
+};

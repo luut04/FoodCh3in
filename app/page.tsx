@@ -1,71 +1,55 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/Button';
-import styles from '@/styles/pages/home.module.scss';
+import { useState } from 'react';
+import { Button } from '@/components/Button'; // O usá <button> normal si falla
+// Si tenés iconos importados, usalos, si no borrá el Icon
+// import { GoogleIcon } from '@/components/Icons'; 
 
-export default function Home() {
-  const { data: session, status } = useSession();
+export default function LandingPage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (session) {
-      router.push('/menu');
-    }
-  }, [session, router]);
+  const handleMockLogin = async () => {
+    setLoading(true);
+    
+    // SIMULACIÓN: Hacemos de cuenta que Google nos dijo que sí
+    console.log("🔓 Login simulado exitoso...");
+    await new Promise(r => setTimeout(r, 1000)); // Espera dramática
 
-  if (status === 'loading') {
-    return (
-      <div className={styles.loading}>
-        <div className={styles.spinner}></div>
-      </div>
-    );
-  }
+    // REDIRECCIÓN MÁGICA:
+    // Te mandamos directo a pagar la orden de prueba "test-123"
+    // (Asegurate de haber puesto la orden falsa en ordersStore.ts como hicimos antes)
+    router.push('/checkout/test-123');
+  };
 
   return (
-    <div className="container" style={{ paddingTop: '5rem', paddingBottom: '5rem' }}>
-      <div className={styles.hero}>
-        <div style={{ marginBottom: '3rem' }}>
-          <h1>FoodCh3in</h1>
-          <p className={styles.tagline}>
-            Buy food tickets with your credit card, receive an NFT without even knowing what a wallet is.
-          </p>
-        </div>
+    <div className="min-h-screen bg-orange-50 flex flex-col items-center justify-center p-4 text-center">
+      
+      <h1 className="text-4xl font-extrabold text-orange-600 mb-2">
+        FoodCh3in 🍔
+      </h1>
+      <p className="text-gray-600 mb-8 text-lg">
+        La forma más rápida de pagar tu comida.<br/>
+        <span className="text-sm text-gray-400">Powered by Crossmint & Arkiv</span>
+      </p>
 
-        <div className={styles.features}>
-          <div className={styles.feature}>
-            <div className={styles.icon}>🎫</div>
-            <h3>Easy Purchase</h3>
-            <p>Buy tickets with your credit card, no crypto knowledge needed</p>
-          </div>
-          <div className={styles.feature}>
-            <div className={styles.icon}>🔐</div>
-            <h3>Secure NFTs</h3>
-            <p>Your ticket is an NFT stored securely on the blockchain</p>
-          </div>
-          <div className={styles.feature}>
-            <div className={styles.icon}>⚡</div>
-            <h3>Instant Access</h3>
-            <p>Get your ticket immediately after payment</p>
-          </div>
-        </div>
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border border-orange-100">
+        <h2 className="text-xl font-bold mb-6 text-gray-800">Bienvenido</h2>
+        
+        <button
+          onClick={handleMockLogin}
+          disabled={loading}
+          className="w-full bg-white border border-gray-300 text-gray-700 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 transition-all shadow-sm"
+        >
+          {/* Icono de Google trucho con texto */}
+          <span className="text-xl">G</span> 
+          {loading ? "Iniciando..." : "Ingresar con Google"}
+        </button>
 
-        <div className={styles.cta}>
-          <Button
-            size="lg"
-            onClick={() => signIn('google', { callbackUrl: '/menu' })}
-            style={{ fontSize: '1.25rem', padding: '1.25rem 3rem' }}
-          >
-            🚀 Login with Google
-          </Button>
-          <p>No wallet setup required • No crypto experience needed</p>
-        </div>
-
-        <div className={styles.demoBadge}>
-          <span>🎪 Hackathon MVP Demo</span>
-        </div>
+        <p className="mt-4 text-xs text-gray-400">
+          * En esta demo, el login es automático.
+        </p>
       </div>
     </div>
   );

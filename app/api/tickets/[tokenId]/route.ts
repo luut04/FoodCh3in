@@ -15,16 +15,16 @@ export async function GET(
     return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
   }
 
-  // 2. Buscamos la Orden asociada para tener los detalles (hamburguesa, precio, etc)
+  // 2. Buscamos la Orden asociada
   const order = ordersStore.getOrder(ticket.orderId);
 
-  // 3. Construimos la respuesta 'TicketStatus' que espera tu frontend
+  // 3. Construimos la respuesta JSON
   const responseData: TicketStatus = {
     tokenId: ticket.tokenId,
     owner: ticket.owner,
     consumed: ticket.consumed,
     metadataUrl: ticket.metadataUrl,
-    order: order // Si la orden existe, se envía completa, si no undefined
+    order: order 
   };
 
   return NextResponse.json(responseData);
