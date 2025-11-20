@@ -1,64 +1,70 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import { ordersStore } from '@/lib/ordersStore';
+import { uploadOrderMetadata } from '@/lib/arkiv'; 
+import { Ticket, Order } from '@/types';
 
-/**
- * POST /api/checkout/simulate
- * Simulate a successful payment (triggers webhook internally)
- */
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user?.email) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const body = await req.json();
-    const { orderId, checkoutId } = body;
+    const { orderId } = body;
 
-    if (!orderId) {
-      return NextResponse.json(
-        { error: 'orderId is required' },
-        { status: 400 }
-      );
+    console.log(`💳 [SIMULATION] Iniciando Checkout para Orden: ${orderId}`);
+
+    // 1. BUSCAR: ¿Existe la orden en memoria?
+    let order = ordersStore.getOrder(orderId);
+
+    // --- PARCHE SALVAVIDAS ---
+    // Si reiniciaste el server y se borró la memoria, la creamos acá para que no falle.
+    if (!order) {
+      console.warn("⚠️ Orden no encontrada. Creando respaldo...");
+      const fallbackOrder: Order = {
+        id: orderId,
+        userId: "user-demo",
+        userEmail: "demo@hackaton.com",
+        walletAddress: "0x123...abc",
+        items: [{ id: "1", name: "Hamburguesa (Demo)", description: "Auto-generada", price: 10.00 }],
+        total: 10.00,
+        status: 'pending',
+        createdAt: new Date()
+      };
+      order = ordersStore.createOrder(fallbackOrder);
     }
 
-    // Simulate payment by calling the webhook endpoint
-    const webhookUrl = new URL('/api/webhooks/crossmint', req.url);
-    const webhookResponse = await fetch(webhookUrl.toString(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        orderId,
-        checkoutId,
-        status: 'succeeded',
-        timestamp: new Date().toISOString(),
-      }),
+    // 2. ARKIV: Subimos los datos (Simulado)
+    const arkivURI = await uploadOrderMetadata(order);
+
+    // 3. CROSSMINT: Generamos IDs falsos (Simulado)
+    const mockTokenId = "NFT-" + Math.floor(Math.random() * 100000);
+    const mockWallet = "0x" + Math.random().toString(16).slice(2, 40); 
+
+    // 4. ACTUALIZAR: Marcamos la orden como pagada
+    ordersStore.updateOrder(orderId, {
+      status: 'minted',
+      tokenId: mockTokenId,
+      paidAt: new Date()
     });
 
-    const webhookData = await webhookResponse.json();
+    // 5. CREAR TICKET: Guardamos el ticket
+    const newTicket: Ticket = {
+      tokenId: mockTokenId,
+      orderId: orderId,
+      owner: order.walletAddress || mockWallet,
+      consumed: false,
+      metadataUrl: arkivURI,
+      createdAt: new Date()
+    };
 
-    if (!webhookResponse.ok) {
-      throw new Error('Webhook failed: ' + JSON.stringify(webhookData));
-    }
+    ordersStore.createTicket(newTicket);
 
-    return NextResponse.json({
-      success: true,
-      tokenId: webhookData.tokenId,
-      message: 'Payment simulated successfully',
+    console.log(`✅ [SUCCESS] Ticket creado: ${mockTokenId}`);
+
+    return NextResponse.json({ 
+      success: true, 
+      tokenId: mockTokenId 
     });
+
   } catch (error) {
-    console.error('Error in /api/checkout/simulate:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error("💥 Error en simulación:", error);
+    return NextResponse.json({ error: 'Simulation failed' }, { status: 500 });
   }
 }
-

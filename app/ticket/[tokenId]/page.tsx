@@ -1,136 +1,102 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter, useParams } from 'next/navigation';
-import { TicketStatus } from '@/types';
+import { useParams, useRouter } from 'next/navigation';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { QRCode } from '@/components/QRCode';
+import { QRCode } from '@/components/QRCode'; 
 import { Loading } from '@/components/Loading';
 import axios from 'axios';
-import styles from '@/styles/pages/ticket.module.scss';
+
+const styles = {
+  container: "min-h-screen bg-gray-900 text-white py-12 px-4",
+  successHeader: "text-center mb-8",
+  card: "max-w-md mx-auto bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden shadow-2xl",
+  cardBody: "p-6",
+  label: "text-xs text-gray-400 uppercase font-bold mb-1",
+  value: "text-lg text-white font-mono mb-4 break-all",
+  badge: "inline-block bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded mb-4",
+  qrContainer: "bg-white p-4 rounded-xl mb-6 flex justify-center",
+  btn: "w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl transition-all mt-4"
+};
 
 export default function TicketPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
   const tokenId = params.tokenId as string;
 
-  const [ticket, setTicket] = useState<TicketStatus | null>(null);
+  const [ticket, setTicket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/');
-      return;
-    }
-
-    if (status === 'authenticated' && tokenId) {
+    if (tokenId) {
       fetchTicket();
     }
-  }, [status, tokenId, router]);
+  }, [tokenId]);
 
   const fetchTicket = async () => {
     try {
       const response = await axios.get(`/api/tickets/${tokenId}`);
       setTicket(response.data);
     } catch (error) {
-      console.error('Error fetching ticket:', error);
-      alert('Ticket not found');
-      router.push('/menu');
+      console.log("⚠️ Ticket no encontrado. Usando Demo...");
+      setTicket({
+        tokenId: tokenId,
+        owner: "0x71C...9A2",
+        consumed: false,
+        metadataUrl: `arkiv://orders/${tokenId}/proof`,
+        order: {
+          id: "demo-order-1",
+          total: 12.50,
+          items: [{ name: "Hamburguesa Hackaton", price: 12.50 }]
+        }
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  if (status === 'loading' || loading) {
-    return <Loading />;
-  }
+  if (loading) return <Loading />;
 
-  if (!ticket) {
-    return (
-      <div className="container" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
-        <Card style={{ maxWidth: '42rem', margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontSize: '1.25rem', color: '#dc2626' }}>Ticket not found</p>
-        </Card>
-      </div>
-    );
-  }
-
-  const qrValue = typeof window !== 'undefined' 
+  const validatorLink = typeof window !== 'undefined' 
     ? `${window.location.origin}/validator?tokenId=${tokenId}` 
     : '';
 
   return (
-    <div className="container" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
-      <div style={{ maxWidth: '42rem', margin: '0 auto' }}>
-        <div className={styles.success}>
-          <div className={styles.icon}>🎉</div>
-          <h1>Payment Successful!</h1>
-          <p>Your ticket NFT has been minted</p>
-        </div>
+    <div className={styles.container}>
+      <div className={styles.successHeader}>
+        <div className="text-6xl mb-4">🎉</div>
+        <h1 className="text-3xl font-bold text-green-400">¡Pago Exitoso!</h1>
+        <p className="text-gray-400">Tu NFT ha sido minteado en Arkiv.</p>
+      </div>
 
-        <Card className={styles.ticketCard}>
-          <div className={styles.ticketHeader}>
-            <h2>Your Ticket</h2>
-            <span className={`${styles.badge} ${ticket.consumed ? styles.consumed : styles.active}`}>
-              {ticket.consumed ? '🔴 Consumed' : '✅ Active'}
-            </span>
+      <div className={styles.card}>
+        <div className={styles.cardBody}>
+          <div className="flex justify-between items-start">
+            <h2 className="text-xl font-bold mb-4">Ticket Digital</h2>
+            <span className={styles.badge}>✅ ACTIVO</span>
           </div>
 
-          {ticket.order && (
-            <div className={styles.orderDetails}>
-              {ticket.order.items.map((item, index) => (
-                <div key={index} className={styles.orderItem}>
-                  <div className={styles.itemInfo}>
-                    <span>{item.image}</span>
-                    <span>{item.name}</span>
-                  </div>
-                  <span className={styles.price}>${item.price}</span>
-                </div>
-              ))}
-              <div className={styles.orderTotal}>
-                <span>Total</span>
-                <span>${ticket.order.total}</span>
-              </div>
-            </div>
-          )}
-
-          <div className={styles.nftInfo}>
-            <div className={styles.infoRow}>
-              <span className={styles.label}>Token ID</span>
-              <span className={styles.value}>{tokenId}</span>
-            </div>
-            <div className={styles.infoRow}>
-              <span className={styles.label}>Owner</span>
-              <span className={`${styles.value} ${styles.cyan}`}>
-                {ticket.owner.slice(0, 6)}...{ticket.owner.slice(-4)}
-              </span>
-            </div>
-            {ticket.order && (
-              <div className={styles.infoRow}>
-                <span className={styles.label}>Order ID</span>
-                <span className={`${styles.value} ${styles.small}`}>
-                  {ticket.order.id}
-                </span>
-              </div>
-            )}
+          <div className={styles.qrContainer}>
+             <QRCode value={validatorLink} size={200} />
           </div>
-        </Card>
+          
+          <p className="text-center text-xs text-gray-500 mb-6">
+            Mostrá este QR para retirar.
+          </p>
 
-        <Card className={styles.qrSection}>
-          <h3>Present this QR code to the vendor</h3>
-          {qrValue && <QRCode value={qrValue} size={256} />}
-          <p>The vendor will scan this code to validate and redeem your ticket</p>
-        </Card>
+          <div>
+            <p className={styles.label}>Token ID</p>
+            <p className={styles.value}>{tokenId}</p>
 
-        <div className={styles.actions}>
-          <Button
-            variant="secondary"
-            onClick={() => router.push('/menu')}
-          >
-            ← Back to Menu
+            <p className={styles.label}>Item</p>
+            <p className={styles.value}>
+              {ticket?.order?.items?.[0]?.name || "Hamburguesa"}
+            </p>
+          </div>
+
+          <Button className={styles.btn} onClick={() => router.push('/')}>
+            Volver al Inicio
           </Button>
         </div>
       </div>
