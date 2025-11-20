@@ -1,64 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 
-/**
- * POST /api/checkout/simulate
- * Simulate a successful payment (triggers webhook internally)
- */
-export async function POST(req: NextRequest) {
+// COMENTARIO: Este archivo simula ser el servidor de Crossmint y Arkiv.
+// Recibe la orden de pago del Frontend y devuelve un NFT falso.
+
+export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user?.email) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const body = await req.json();
-    const { orderId, checkoutId } = body;
+    const { orderId, userEmail, amount } = body;
 
-    if (!orderId) {
-      return NextResponse.json(
-        { error: 'orderId is required' },
-        { status: 400 }
-      );
-    }
+    console.log(`💳 Procesando pago de ${amount} para ${userEmail}...`);
 
-    // Simulate payment by calling the webhook endpoint
-    const webhookUrl = new URL('/api/webhooks/crossmint', req.url);
-    const webhookResponse = await fetch(webhookUrl.toString(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        orderId,
-        checkoutId,
-        status: 'succeeded',
-        timestamp: new Date().toISOString(),
-      }),
-    });
+    // 1. SIMULACIÓN ARKIV
+    // Aquí normalmente subiríamos el JSON a Arkiv Network.
+    // Generamos un link falso que parece real.
+    const mockArkivLink = `arkiv://orders/${orderId}/immutable_proof`;
 
-    const webhookData = await webhookResponse.json();
+    // 2. SIMULACIÓN CROSSMINT
+    // Aquí normalmente Crossmint mintea el NFT.
+    // Generamos un ID de Token al azar.
+    const mockTokenId = "NFT-" + Math.floor(Math.random() * 100000);
 
-    if (!webhookResponse.ok) {
-      throw new Error('Webhook failed: ' + JSON.stringify(webhookData));
-    }
-
+    // Devolvemos éxito al Frontend
     return NextResponse.json({
       success: true,
-      tokenId: webhookData.tokenId,
-      message: 'Payment simulated successfully',
+      tokenId: mockTokenId,
+      message: "Pago procesado y NFT minteado",
+      proof: mockArkivLink
     });
+
   } catch (error) {
-    console.error('Error in /api/checkout/simulate:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Error en el servidor simulado' }, { status: 500 });
   }
 }
 
