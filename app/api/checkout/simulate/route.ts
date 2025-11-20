@@ -1,35 +1,52 @@
 import { NextResponse } from 'next/server';
-
-// COMENTARIO: Este archivo simula ser el servidor de Crossmint y Arkiv.
-// Recibe la orden de pago del Frontend y devuelve un NFT falso.
+import { ordersStore } from '@/lib/ordersStore';
+import { Ticket } from '@/types';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { orderId, userEmail, amount } = body;
+    const { orderId, checkoutId } = body;
 
-    console.log(`💳 Procesando pago de ${amount} para ${userEmail}...`);
+    // 1. Validamos que la orden exista
+    const order = ordersStore.getOrder(orderId);
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
 
-    // 1. SIMULACIÓN ARKIV
-    // Aquí normalmente subiríamos el JSON a Arkiv Network.
-    // Generamos un link falso que parece real.
-    const mockArkivLink = `arkiv://orders/${orderId}/immutable_proof`;
-
-    // 2. SIMULACIÓN CROSSMINT
-    // Aquí normalmente Crossmint mintea el NFT.
-    // Generamos un ID de Token al azar.
+    // 2. SIMULACIÓN DE INFRAESTRUCTURA (Crossmint + Arkiv)
     const mockTokenId = "NFT-" + Math.floor(Math.random() * 100000);
+    const mockArkivLink = `arkiv://orders/${orderId}/proof`;
+    const mockWallet = "0x" + Math.random().toString(16).slice(2, 40); // Wallet simulada del usuario
 
-    // Devolvemos éxito al Frontend
-    return NextResponse.json({
-      success: true,
+    // 3. ACTUALIZAMOS LA ORDEN (Usando tu método updateOrder)
+    ordersStore.updateOrder(orderId, {
+      status: 'minted',
       tokenId: mockTokenId,
-      message: "Pago procesado y NFT minteado",
-      proof: mockArkivLink
+      paidAt: new Date()
+    });
+
+    // 4. CREAMOS EL TICKET (Usando tu método createTicket)
+    // ¡Esto es crucial! Si no creamos el ticket aquí, la página siguiente dará error.
+    const newTicket: Ticket = {
+      tokenId: mockTokenId,
+      orderId: orderId,
+      owner: order.walletAddress || mockWallet,
+      consumed: false,
+      metadataUrl: mockArkivLink,
+      createdAt: new Date()
+    };
+
+    ordersStore.createTicket(newTicket);
+
+    console.log(`✅ Ticket creado: ${mockTokenId} para Orden: ${orderId}`);
+
+    return NextResponse.json({ 
+      success: true, 
+      tokenId: mockTokenId 
     });
 
   } catch (error) {
-    return NextResponse.json({ error: 'Error en el servidor simulado' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: 'Simulation failed' }, { status: 500 });
   }
 }
-
